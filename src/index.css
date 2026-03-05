@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --font-pixel: "Press Start 2P", "Courier New", monospace;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #020617; /* Slate 950 */
+  color: white;
+  font-family: var(--font-pixel);
+  user-select: none;
+}
+
+#root {
+  font-family: var(--font-pixel);
+  min-height: 100vh;
+}
+
+canvas {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
