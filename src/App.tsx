@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GameEngine, type EngineMode } from "./engine/GameEngine";
 import type { GameState } from "./engine/types";
+import { soundManager } from "./engine/SoundManager";
 import { GAME_WIDTH, GAME_HEIGHT } from "./game/MapDef";
 import { HealthBar } from "./components/HealthBar";
 import { OnlineLobby } from "./ui/OnlineLobby";
@@ -62,11 +63,13 @@ function App() {
     setJoinError(null);
     setJoining(false);
     setShowQuitConfirm(false);
+    soundManager.playSelect();
     setScreen("menu");
   }, []);
 
   // Create room (host)
   const handleCreateRoom = useCallback(async () => {
+    soundManager.playSelect();
     try {
       const result = await createRoom();
       peerRef.current = result.peer;
@@ -96,6 +99,7 @@ function App() {
     setJoining(true);
     setJoinError(null);
     setRole("guest");
+    soundManager.playSelect();
     setScreen("online-lobby");
 
     joinRoom(roomCode)
@@ -134,6 +138,7 @@ function App() {
     setJoinError(null);
     setJoining(false);
     setShowQuitConfirm(false);
+    soundManager.playSelect();
     setScreen("menu");
   }, []);
 
@@ -325,7 +330,10 @@ function App() {
                 <div className="flex gap-4 w-full">
                   <button
                     type="button"
-                    onClick={() => setShowQuitConfirm(false)}
+                    onClick={() => {
+                      soundManager.playSelect();
+                      setShowQuitConfirm(false);
+                    }}
                     className="flex-1 glass-button glass-panel py-3 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white/10"
                   >
                     No
@@ -386,7 +394,10 @@ function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl px-4">
                   <button
                     type="button"
-                    onClick={() => setScreen("local")}
+                    onClick={() => {
+                      soundManager.playSelect();
+                      setScreen("local");
+                    }}
                     className="group relative glass-panel glass-button p-8 rounded-2xl flex flex-col items-center gap-4 hover:scale-[1.02]"
                   >
                     <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition-colors">
@@ -423,6 +434,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => {
+                      soundManager.playSelect();
                       setRole("guest");
                       setScreen("online-lobby");
                     }}

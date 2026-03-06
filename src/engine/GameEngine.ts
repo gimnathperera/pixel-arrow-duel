@@ -1,6 +1,7 @@
 import { GAME_HEIGHT, GAME_WIDTH, INITIAL_PLATFORMS } from "../game/MapDef";
 import type { StateMessage } from "../multiplayer/messages";
 import type { GameState, PlayerState, Rectangle } from "./types";
+import { soundManager } from "./SoundManager";
 
 const PLAYER_WIDTH = 24;
 const PLAYER_HEIGHT = 24;
@@ -296,6 +297,7 @@ export class GameEngine {
     if (this.keys.has("KeyW") && p1.isGrounded) {
       p1.velocity.y = JUMP_FORCE;
       p1.isGrounded = false;
+      soundManager.playJump();
     }
 
     if (this.keys.has("Space") && p1.shootCooldown <= 0) {
@@ -317,6 +319,7 @@ export class GameEngine {
     if (p2Keys.has("ArrowUp") && p2.isGrounded) {
       p2.velocity.y = JUMP_FORCE;
       p2.isGrounded = false;
+      soundManager.playJump();
     }
 
     if (p2Keys.has("Enter") && p2.shootCooldown <= 0) {
@@ -366,6 +369,7 @@ export class GameEngine {
       },
       active: true,
     });
+    soundManager.playShoot();
   }
 
   private handlePlatformCollisions(player: PlayerState, horizontal: boolean) {
@@ -398,6 +402,7 @@ export class GameEngine {
                   "#fbbf24",
                   5,
                 );
+                soundManager.playBounce();
               } else {
                 player.velocity.y = 0;
                 if (
@@ -427,6 +432,7 @@ export class GameEngine {
 
     player.health -= amount;
     this.state.screenShakeTimer = 15;
+    soundManager.playHit();
 
     this.spawnParticles(
       player.x + player.width / 2,
@@ -441,6 +447,7 @@ export class GameEngine {
       this.state.winner =
         playerId === "p1" ? "Player 2 (Blue)" : "Player 1 (Red)";
       this.state.resetTimer = 180; // 3 seconds at 60fps
+      soundManager.playExplosion();
     }
   }
 
