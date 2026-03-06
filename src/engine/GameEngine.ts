@@ -1,5 +1,69 @@
 import { GAME_HEIGHT, GAME_WIDTH, INITIAL_PLATFORMS } from "../game/MapDef";
+import type { StateMessage } from "../multiplayer/messages";
 import type { GameState, PlayerState, Rectangle } from "./types";
+
+const PLAYER_WIDTH = 24;
+const PLAYER_HEIGHT = 24;
+const ARROW_WIDTH = 16;
+const ARROW_HEIGHT = 4;
+
+function snapshotToGameState(msg: StateMessage): GameState {
+  const platforms = JSON.parse(JSON.stringify(INITIAL_PLATFORMS)) as GameState["platforms"];
+  if (msg.movingPlatforms) {
+    for (const { id, x } of msg.movingPlatforms) {
+      const plat = platforms.find((p) => p.id === id);
+      if (plat) plat.x = x;
+    }
+  }
+  const p1 = msg.players.p1;
+  const p2 = msg.players.p2;
+  return {
+    players: [
+      {
+        id: "p1",
+        x: p1.x,
+        y: p1.y,
+        width: PLAYER_WIDTH,
+        height: PLAYER_HEIGHT,
+        color: "#ef4444",
+        velocity: { x: p1.vx, y: p1.vy },
+        health: p1.health,
+        isGrounded: false,
+        facingRight: p1.facing === "right",
+        shootCooldown: 0,
+      },
+      {
+        id: "p2",
+        x: p2.x,
+        y: p2.y,
+        width: PLAYER_WIDTH,
+        height: PLAYER_HEIGHT,
+        color: "#3b82f6",
+        velocity: { x: p2.vx, y: p2.vy },
+        health: p2.health,
+        isGrounded: false,
+        facingRight: p2.facing === "right",
+        shootCooldown: 0,
+      },
+    ],
+    platforms,
+    arrows: msg.arrows.map((a) => ({
+      id: a.id,
+      ownerId: a.owner,
+      x: a.x,
+      y: a.y,
+      width: ARROW_WIDTH,
+      height: ARROW_HEIGHT,
+      velocity: { x: a.vx, y: a.vy },
+      active: true,
+    })),
+    particles: [],
+    screenShakeTimer: 0,
+    matchOver: msg.winner !== null,
+    winner: msg.winner === null ? null : msg.winner === "p1" ? "Player 2 (Blue)" : "Player 1 (Red)",
+    resetTimer: 0,
+  };
+}
 
 const GRAVITY = 0.5;
 const MAX_FALL_SPEED = 12;
@@ -10,22 +74,55 @@ const ARROW_SPEED = 15;
 const SHOOT_COOLDOWN = 30; // Frames
 const MAX_HEALTH = 100;
 
+export type EngineMode = "local" | "host" | "guest";
+
 export class GameEngine {
   private state: GameState;
   private ctx: CanvasRenderingContext2D;
   private keys: Set<string> = new Set();
   private animationFrameId: number = 0;
+  /** When set (host mode), P2 input is taken from this instead of keyboard. */
+  private p2InputOverride: Set<string> | null = null;
+  private readonly isGuest: boolean;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, options?: { mode?: EngineMode }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas 2d context not available");
     this.ctx = ctx;
     this.ctx.imageSmoothingEnabled = false;
+    this.isGuest = options?.mode === "guest";
 
     this.state = this.getInitialState();
 
-    window.addEventListener("keydown", this.handleKeyDown);
-    window.addEventListener("keyup", this.handleKeyUp);
+    if (!this.isGuest) {
+      window.addEventListener("keydown", this.handleKeyDown);
+      window.addEventListener("keyup", this.handleKeyUp);
+    }
+  }
+
+  /** Host only: set P2 keys from network. Pass null to use local keyboard again. */
+  public setP2InputOverride(keys: Set<string> | null): void {
+    this.p2InputOverride = keys;
+  }
+
+  /** Guest only: replace full state (e.g. from snapshot). */
+  public setState(state: GameState): void {
+    this.state = state;
+  }
+
+  /** Guest only: build GameState from StateMessage and set it. */
+  public setStateFromSnapshot(msg: StateMessage): void {
+    this.state = snapshotToGameState(msg);
+  }
+
+  /** Guest only: run draw loop only (no update, no key handling). */
+  public startGuest(): void {
+    if (!this.isGuest) return;
+    const loop = () => {
+      this.draw();
+      this.animationFrameId = requestAnimationFrame(loop);
+    };
+    this.animationFrameId = requestAnimationFrame(loop);
   }
 
   private getInitialState(): GameState {
@@ -175,12 +272,17 @@ export class GameEngine {
     }
   }
 
+  private getP2Keys(): Set<string> {
+    return this.p2InputOverride ?? this.keys;
+  }
+
   private updatePlayers() {
     const p1 = this.state.players[0];
     const p2 = this.state.players[1];
+    const p2Keys = this.getP2Keys();
 
     // Input Handling
-    // Player 1: WASD + Space
+    // Player 1: WASD + Space (always from local keyboard)
     if (this.keys.has("KeyA")) {
       p1.velocity.x = -MOVE_SPEED;
       p1.facingRight = false;
@@ -201,23 +303,23 @@ export class GameEngine {
       p1.shootCooldown = SHOOT_COOLDOWN;
     }
 
-    // Player 2: Arrows + Enter
-    if (this.keys.has("ArrowLeft")) {
+    // Player 2: Arrows + Enter (from p2Keys: local keyboard or host's network override)
+    if (p2Keys.has("ArrowLeft")) {
       p2.velocity.x = -MOVE_SPEED;
       p2.facingRight = false;
-    } else if (this.keys.has("ArrowRight")) {
+    } else if (p2Keys.has("ArrowRight")) {
       p2.velocity.x = MOVE_SPEED;
       p2.facingRight = true;
     } else {
       p2.velocity.x = 0;
     }
 
-    if (this.keys.has("ArrowUp") && p2.isGrounded) {
+    if (p2Keys.has("ArrowUp") && p2.isGrounded) {
       p2.velocity.y = JUMP_FORCE;
       p2.isGrounded = false;
     }
 
-    if (this.keys.has("Enter") && p2.shootCooldown <= 0) {
+    if (p2Keys.has("Enter") && p2.shootCooldown <= 0) {
       this.shootArrow(p2);
       p2.shootCooldown = SHOOT_COOLDOWN;
     }
