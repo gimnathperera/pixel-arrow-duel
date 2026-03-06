@@ -61,7 +61,7 @@ function snapshotToGameState(msg: StateMessage): GameState {
     particles: [],
     screenShakeTimer: 0,
     matchOver: msg.winner !== null,
-    winner: msg.winner === null ? null : msg.winner === "p1" ? "Player 2 (Blue)" : "Player 1 (Red)",
+    winner: msg.winner === null ? null : msg.winner === "p1" ? "Player 1 (Red)" : "Player 2 (Blue)",
     resetTimer: 0,
   };
 }

@@ -7,7 +7,7 @@ import type { GameEngine } from "../engine/GameEngine";
 import { buildStateMessage } from "./messages";
 import { INPUT_TO_KEY, isInputMessage } from "./messages";
 
-const SNAPSHOT_HZ = 15;
+const SNAPSHOT_HZ = 45;
 const SNAPSHOT_INTERVAL_MS = 1000 / SNAPSHOT_HZ;
 
 export interface HostControllerCallbacks {
