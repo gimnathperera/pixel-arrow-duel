@@ -509,6 +509,82 @@ export class GameEngine {
     this.state.particles = this.state.particles.filter((p) => p.life > 0);
   }
 
+  private drawPlayer(p: PlayerState) {
+    const S = 3; // each logical pixel = 3×3 screen pixels
+    const isRed = p.color === "#ef4444";
+
+    // ── Colour palette ──
+    const hood     = isRed ? "#7f1d1d" : "#1e3a8a";
+    const hoodFrnt = isRed ? "#991b1b" : "#1e40af";
+    const skin     = "#fde68a";
+    const eyeC     = "#f0f9ff";
+    const armor    = isRed ? "#ef4444" : "#3b82f6";
+    const armorD   = isRed ? "#b91c1c" : "#1d4ed8";
+    const armorL   = isRed ? "#fca5a5" : "#93c5fd";
+    const belt     = "#44403c";
+    const boot     = "#1c1917";
+
+    // ── 8×8 logical-pixel map (designed for facing RIGHT) ──
+    // "" = transparent
+    const pixels: string[][] = [
+      ["",      "",       hood,    hood,    hood,    hood,    "",       ""      ], // 0 hood top
+      ["",      hood,     skin,    skin,    skin,    skin,    hood,     ""      ], // 1 face
+      ["",      hood,     skin,    skin,    eyeC,    skin,    hoodFrnt, ""      ], // 2 face + eye
+      ["",      hood,     skin,    skin,    skin,    hoodFrnt,"",       ""      ], // 3 lower face
+      ["",      armorL,   armor,   armor,   armor,   armor,   "",       ""      ], // 4 shoulders
+      ["",      armor,    armorD,  armor,   armor,   armorD,  armor,    ""      ], // 5 chest detail
+      [armor,   armor,    belt,    belt,    belt,    armor,   armor,    ""      ], // 6 belt
+      ["",      boot,     boot,    "",      boot,    boot,    "",       ""      ], // 7 boots
+    ];
+
+    this.ctx.save();
+
+    // Glow
+    this.ctx.shadowBlur = 20;
+    this.ctx.shadowColor = isRed ? "rgba(239,68,68,0.5)" : "rgba(59,130,246,0.5)";
+
+    // Draw pixel character
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const mapCol = p.facingRight ? col : 7 - col;
+        const color = pixels[row][mapCol];
+        if (color) {
+          this.ctx.fillStyle = color;
+          this.ctx.fillRect(p.x + col * S, p.y + row * S, S, S);
+        }
+      }
+    }
+
+    // ── Bow ──
+    const by = p.y + S;  // top of bow aligns with row 1
+    this.ctx.shadowBlur = 6;
+    this.ctx.shadowColor = "#92400e";
+
+    if (p.facingRight) {
+      const bx = p.x + p.width;
+      // Limbs
+      this.ctx.fillStyle = "#78350f";
+      this.ctx.fillRect(bx,     by,            S,     S);      // top tip
+      this.ctx.fillRect(bx,     by + S,        S,     S * 5);  // body
+      this.ctx.fillRect(bx,     by + S * 6,    S,     S);      // bottom tip
+      // String
+      this.ctx.fillStyle = "#d4a574";
+      this.ctx.fillRect(bx + S + 1, by + S,    2,     S * 5);
+    } else {
+      const bx = p.x - S;
+      // Limbs
+      this.ctx.fillStyle = "#78350f";
+      this.ctx.fillRect(bx,     by,            S,     S);      // top tip
+      this.ctx.fillRect(bx,     by + S,        S,     S * 5);  // body
+      this.ctx.fillRect(bx,     by + S * 6,    S,     S);      // bottom tip
+      // String
+      this.ctx.fillStyle = "#d4a574";
+      this.ctx.fillRect(bx - 3, by + S,        2,     S * 5);
+    }
+
+    this.ctx.restore();
+  }
+
   private draw() {
     // Background - dynamic gradient
     const bgGradient = this.ctx.createRadialGradient(
@@ -599,34 +675,7 @@ export class GameEngine {
 
     // Draw Players
     for (const p of this.state.players) {
-      this.ctx.save();
-      
-      // Player Glow
-      this.ctx.shadowBlur = 25;
-      this.ctx.shadowColor = p.color === "#ef4444" ? "rgba(239, 68, 68, 0.6)" : "rgba(59, 130, 246, 0.6)";
-      
-      // Body (Slightly rounded)
-      this.ctx.fillStyle = p.color;
-      this.ctx.fillRect(p.x, p.y, p.width, p.height);
-
-      // Detail: Inner shadow
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-      this.ctx.fillRect(p.x, p.y + p.height - 4, p.width, 4);
-
-      // Eye / Direction indicator (Glowing white)
-      this.ctx.shadowBlur = 15;
-      this.ctx.shadowColor = "white";
-      this.ctx.fillStyle = "#ffffff";
-      const eyeX = p.facingRight ? p.x + p.width - 8 : p.x + 4;
-      this.ctx.fillRect(eyeX, p.y + 6, 4, 4);
-
-      // Bow indication
-      this.ctx.shadowBlur = 0;
-      this.ctx.fillStyle = "#b45309"; // Amber 700
-      const bowX = p.facingRight ? p.x + p.width - 2 : p.x - 2;
-      this.ctx.fillRect(bowX, p.y + 8, 4, 10);
-      
-      this.ctx.restore();
+      this.drawPlayer(p);
     }
 
     // Draw Arrows
