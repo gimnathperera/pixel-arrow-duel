@@ -15,23 +15,14 @@ export interface PeerConnectionCallbacks {
   onError?: (err: Error) => void;
 }
 
-/** Generate a short room code (6 alphanumeric chars) for the host peer ID. */
-function generateRoomCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed ambiguous chars like 0, O, 1, I
-  let result = "";
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-/** Returns the peer ID as the room code. */
+/** Generate a short room code (alphanumeric) from a peer ID for display. */
 export function peerIdToRoomCode(peerId: string): string {
-  return peerId.toUpperCase();
+  return peerId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase() || peerId.slice(0, 8);
 }
 
 /**
- * Create a Peer that will act as host. Peer ID is the room code.
+ * Create a Peer that will act as host. PeerJS generates the ID automatically.
+ * Returns the Peer and a promise that resolves with the DataConnection when a guest connects.
  */
 export function createHostPeer(): Promise<{
   peer: Peer;
@@ -39,8 +30,7 @@ export function createHostPeer(): Promise<{
   connectionPromise: Promise<DataConnection>;
 }> {
   return new Promise((resolve, reject) => {
-    const roomId = generateRoomCode();
-    const peer = new Peer(roomId, { debug: 0 });
+    const peer = new Peer({ debug: 0 });
 
     const connectionPromise = new Promise<DataConnection>((connResolve) => {
       peer.on("connection", (conn: DataConnection) => {
@@ -59,7 +49,8 @@ export function createHostPeer(): Promise<{
 }
 
 /**
- * Create a Peer and connect to the host. Returns the Peer and a promise that resolves with the DataConnection when connected.
+ * Create a Peer and connect to the host. Returns the Peer and a promise
+ * that resolves with the DataConnection when connected, or rejects after 15s.
  */
 export function createGuestPeer(hostPeerId: string): Promise<{
   peer: Peer;
@@ -73,8 +64,8 @@ export function createGuestPeer(hostPeerId: string): Promise<{
       const connectionPromise = new Promise<DataConnection>((connResolve, connReject) => {
         const timeout = setTimeout(() => {
           conn.close();
-          connReject(new Error("Connection timed out (10s). Check the room code."));
-        }, 10000);
+          connReject(new Error("Connection timed out. Check the room code and try again."));
+        }, 15000);
 
         conn.on("open", () => {
           clearTimeout(timeout);

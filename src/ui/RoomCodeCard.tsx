@@ -7,9 +7,8 @@ interface RoomCodeCardProps {
   displayCode?: string;
 }
 
-export function RoomCodeCard({ peerId, displayCode }: RoomCodeCardProps) {
+export function RoomCodeCard({ peerId }: RoomCodeCardProps) {
   const [copied, setCopied] = useState(false);
-  const showCode = displayCode ?? peerId;
 
   async function handleCopy() {
     try {
@@ -32,16 +31,16 @@ export function RoomCodeCard({ peerId, displayCode }: RoomCodeCardProps) {
   return (
     <div className="rounded-lg border-2 border-slate-600 bg-slate-800/80 p-4 text-center">
       <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Room code</p>
-      <p className="font-mono text-xl sm:text-2xl font-bold text-white tracking-widest break-all">
-        {showCode}
+      <p className="font-mono text-xs sm:text-sm font-bold text-white tracking-wider break-all select-all px-2">
+        {peerId}
       </p>
-      <p className="text-slate-500 text-xs mt-1">Share the full code below for your friend to join</p>
+      <p className="text-slate-500 text-xs mt-2">Copy and share this code with your friend</p>
       <button
         type="button"
         onClick={handleCopy}
-        className="mt-3 px-4 py-2 rounded bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium transition-colors"
+        className="mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
       >
-        {copied ? "Copied!" : "Copy full code"}
+        {copied ? "✓ Copied!" : "📋 Copy Code"}
       </button>
     </div>
   );
