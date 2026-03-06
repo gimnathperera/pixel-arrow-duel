@@ -15,14 +15,23 @@ export interface PeerConnectionCallbacks {
   onError?: (err: Error) => void;
 }
 
-/** Generate a short room code (alphanumeric) from a peer ID for display. */
+/** Generate a short room code (6 alphanumeric chars) for the host peer ID. */
+function generateRoomCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed ambiguous chars like 0, O, 1, I
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/** Returns the peer ID as the room code. */
 export function peerIdToRoomCode(peerId: string): string {
-  return peerId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase() || peerId.slice(0, 8);
+  return peerId.toUpperCase();
 }
 
 /**
- * Create a Peer that will act as host. Peer ID is the room code (guest uses this to join).
- * Returns the Peer and a promise that resolves with the DataConnection when a guest connects.
+ * Create a Peer that will act as host. Peer ID is the room code.
  */
 export function createHostPeer(): Promise<{
   peer: Peer;
@@ -30,7 +39,8 @@ export function createHostPeer(): Promise<{
   connectionPromise: Promise<DataConnection>;
 }> {
   return new Promise((resolve, reject) => {
-    const peer = new Peer({ debug: 0 });
+    const roomId = generateRoomCode();
+    const peer = new Peer(roomId, { debug: 0 });
 
     const connectionPromise = new Promise<DataConnection>((connResolve) => {
       peer.on("connection", (conn: DataConnection) => {
@@ -61,8 +71,19 @@ export function createGuestPeer(hostPeerId: string): Promise<{
     peer.on("open", () => {
       const conn = peer.connect(hostPeerId, { reliable: true });
       const connectionPromise = new Promise<DataConnection>((connResolve, connReject) => {
-        conn.on("open", () => connResolve(conn));
-        conn.on("error", (err) => connReject(err));
+        const timeout = setTimeout(() => {
+          conn.close();
+          connReject(new Error("Connection timed out (10s). Check the room code."));
+        }, 10000);
+
+        conn.on("open", () => {
+          clearTimeout(timeout);
+          connResolve(conn);
+        });
+        conn.on("error", (err) => {
+          clearTimeout(timeout);
+          connReject(err);
+        });
       });
       resolve({ peer, connectionPromise });
     });
