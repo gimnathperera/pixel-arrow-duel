@@ -9,7 +9,7 @@ const ARROW_WIDTH = 16;
 const ARROW_HEIGHT = 4;
 
 function snapshotToGameState(msg: StateMessage): GameState {
-  const platforms = JSON.parse(JSON.stringify(INITIAL_PLATFORMS)) as GameState["platforms"];
+  const platforms = INITIAL_PLATFORMS.map(p => ({ ...p }));
   if (msg.movingPlatforms) {
     for (const { id, x } of msg.movingPlatforms) {
       const plat = platforms.find((p) => p.id === id);

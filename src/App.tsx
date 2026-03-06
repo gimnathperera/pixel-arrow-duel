@@ -148,13 +148,17 @@ function App() {
     const engine = new GameEngine(canvasRef.current);
     engineRef.current = engine;
     engine.start();
-    const uiInterval = setInterval(() => {
+    let rafId: number;
+    const updateUI = () => {
       if (engineRef.current) setGameState({ ...engineRef.current.getState() });
-    }, 1000 / 30);
+      rafId = requestAnimationFrame(updateUI);
+    };
+    rafId = requestAnimationFrame(updateUI);
+
     return () => {
       engine.stop();
       engineRef.current = null;
-      clearInterval(uiInterval);
+      cancelAnimationFrame(rafId);
     };
   }, [screen]);
 
@@ -192,9 +196,12 @@ function App() {
       });
     }
 
-    const uiInterval = setInterval(() => {
+    let rafId: number;
+    const updateUI = () => {
       if (engineRef.current) setGameState({ ...engineRef.current.getState() });
-    }, 1000 / 30);
+      rafId = requestAnimationFrame(updateUI);
+    };
+    rafId = requestAnimationFrame(updateUI);
 
     return () => {
       if (cleanupControllerRef.current) {
@@ -203,7 +210,7 @@ function App() {
       }
       engine.stop();
       engineRef.current = null;
-      clearInterval(uiInterval);
+      cancelAnimationFrame(rafId);
     };
   }, [screen, connection, role]);
 
