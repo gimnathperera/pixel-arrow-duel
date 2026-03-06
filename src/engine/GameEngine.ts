@@ -510,14 +510,36 @@ export class GameEngine {
   }
 
   private draw() {
-    // Clear - slightly brighter background to match UI
-    this.ctx.fillStyle = "#1e293b"; // Slate 800
+    // Background - dynamic gradient
+    const bgGradient = this.ctx.createRadialGradient(
+      GAME_WIDTH / 2, GAME_HEIGHT / 2, 0,
+      GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH
+    );
+    bgGradient.addColorStop(0, "#0f172a"); // Slate 900
+    bgGradient.addColorStop(1, "#020617"); // Slate 950
+    this.ctx.fillStyle = bgGradient;
     this.ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Grid lines for depth
+    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+    this.ctx.lineWidth = 1;
+    for (let x = 0; x < GAME_WIDTH; x += 40) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, GAME_HEIGHT);
+      this.ctx.stroke();
+    }
+    for (let y = 0; y < GAME_HEIGHT; y += 40) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(GAME_WIDTH, y);
+      this.ctx.stroke();
+    }
 
     // Apply Shake
     this.ctx.save();
     if (this.state.screenShakeTimer > 0) {
-      const magnitude = (this.state.screenShakeTimer / 15) * 5;
+      const magnitude = (this.state.screenShakeTimer / 15) * 8;
       this.ctx.translate(
         (Math.random() - 0.5) * magnitude,
         (Math.random() - 0.5) * magnitude,
@@ -526,69 +548,123 @@ export class GameEngine {
 
     // Draw Platforms
     for (const plat of this.state.platforms) {
-      if (plat.type === "jump-bar") {
-        this.ctx.fillStyle = "#facc15"; // Bright yellow - trampoline
-        this.ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        this.ctx.strokeStyle = "#ca8a04"; // Amber 600 outline
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(
-          plat.x + 1,
-          plat.y + 1,
-          plat.width - 2,
-          plat.height - 2,
-        );
-        this.ctx.fillStyle = "rgba(255,255,255,0.25)";
-        this.ctx.fillRect(plat.x, plat.y, plat.width, 3);
-      } else if (plat.type === "moving") {
-        this.ctx.fillStyle = "#818cf8"; // indigo 400
-        this.ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        this.ctx.fillStyle = "rgba(255,255,255,0.1)";
-        this.ctx.fillRect(plat.x, plat.y, plat.width, 4);
+      this.ctx.save();
+      
+      const isJumpBar = plat.type === "jump-bar";
+      const isMoving = plat.type === "moving";
+      
+      // Platform glow
+      this.ctx.shadowBlur = 15;
+      if (isJumpBar) {
+        this.ctx.shadowColor = "rgba(251, 191, 36, 0.4)";
+        this.ctx.fillStyle = "#f59e0b"; // Amber 500
+      } else if (isMoving) {
+        this.ctx.shadowColor = "rgba(129, 140, 248, 0.4)";
+        this.ctx.fillStyle = "#6366f1"; // Indigo 500
       } else {
-        this.ctx.fillStyle = "#475569"; // Slate 600 - clearer platforms
-        this.ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        this.ctx.fillStyle = "rgba(255,255,255,0.12)";
-        this.ctx.fillRect(plat.x, plat.y, plat.width, 4);
+        this.ctx.shadowBlur = 0;
+        this.ctx.fillStyle = "#334155"; // Slate 700
       }
+
+      // Main body with rounded-ish corners (simulated)
+      this.ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+      
+      // Highlight/texture
+      const highlightGradient = this.ctx.createLinearGradient(plat.x, plat.y, plat.x, plat.y + plat.height);
+      highlightGradient.addColorStop(0, "rgba(255, 255, 255, 0.15)");
+      highlightGradient.addColorStop(0.5, "rgba(255, 255, 255, 0)");
+      highlightGradient.addColorStop(1, "rgba(0, 0, 0, 0.2)");
+      this.ctx.fillStyle = highlightGradient;
+      this.ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+
+      // Top edge glow
+      this.ctx.fillStyle = isJumpBar ? "#fef3c7" : isMoving ? "#c7d2fe" : "#64748b";
+      this.ctx.fillRect(plat.x, plat.y, plat.width, 2);
+
+      this.ctx.restore();
     }
 
     // Draw Particles
     for (const p of this.state.particles) {
-      this.ctx.fillStyle = p.color;
+      this.ctx.save();
       this.ctx.globalAlpha = p.life / p.maxLife;
-      this.ctx.fillRect(p.x, p.y, p.size, p.size);
+      this.ctx.shadowBlur = 10;
+      this.ctx.shadowColor = p.color;
+      this.ctx.fillStyle = p.color;
+      this.ctx.beginPath();
+      this.ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
     }
-    this.ctx.globalAlpha = 1.0;
 
     // Draw Players
     for (const p of this.state.players) {
-      // Body
+      this.ctx.save();
+      
+      // Player Glow
+      this.ctx.shadowBlur = 25;
+      this.ctx.shadowColor = p.color === "#ef4444" ? "rgba(239, 68, 68, 0.6)" : "rgba(59, 130, 246, 0.6)";
+      
+      // Body (Slightly rounded)
       this.ctx.fillStyle = p.color;
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
 
-      // Eye / Direction indicator
+      // Detail: Inner shadow
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      this.ctx.fillRect(p.x, p.y + p.height - 4, p.width, 4);
+
+      // Eye / Direction indicator (Glowing white)
+      this.ctx.shadowBlur = 15;
+      this.ctx.shadowColor = "white";
       this.ctx.fillStyle = "#ffffff";
-      const eyeX = p.facingRight ? p.x + p.width - 6 : p.x + 2;
-      this.ctx.fillRect(eyeX, p.y + 4, 4, 4);
+      const eyeX = p.facingRight ? p.x + p.width - 8 : p.x + 4;
+      this.ctx.fillRect(eyeX, p.y + 6, 4, 4);
 
       // Bow indication
-      this.ctx.fillStyle = "#d97706"; // amber 600
-      const bowX = p.facingRight ? p.x + p.width : p.x - 4;
-      this.ctx.fillRect(bowX, p.y + 10, 4, 8);
+      this.ctx.shadowBlur = 0;
+      this.ctx.fillStyle = "#b45309"; // Amber 700
+      const bowX = p.facingRight ? p.x + p.width - 2 : p.x - 2;
+      this.ctx.fillRect(bowX, p.y + 8, 4, 10);
+      
+      this.ctx.restore();
     }
 
     // Draw Arrows
     for (const arrow of this.state.arrows) {
-      this.ctx.fillStyle = "#e5e7eb"; // gray 200
+      this.ctx.save();
+      
+      // Arrow Glow
+      this.ctx.shadowBlur = 15;
+      this.ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+      
+      // Tail streak
+      const streakGradient = this.ctx.createLinearGradient(
+        arrow.x, arrow.y, 
+        arrow.x - (arrow.velocity.x * 2), arrow.y
+      );
+      streakGradient.addColorStop(0, "rgba(255, 255, 255, 0.8)");
+      streakGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      this.ctx.fillStyle = streakGradient;
+      this.ctx.fillRect(
+        arrow.velocity.x > 0 ? arrow.x - 20 : arrow.x + arrow.width, 
+        arrow.y, 
+        20, 
+        arrow.height
+      );
+
+      // Body
+      this.ctx.fillStyle = "#f8fafc"; // Slate 50
       this.ctx.fillRect(arrow.x, arrow.y, arrow.width, arrow.height);
 
       // Arrowhead
-      this.ctx.fillStyle = "#94a3b8"; // slate 400
+      this.ctx.fillStyle = "#94a3b8"; // Slate 400
       if (arrow.velocity.x > 0) {
         this.ctx.fillRect(arrow.x + arrow.width - 4, arrow.y - 1, 4, 6);
       } else {
         this.ctx.fillRect(arrow.x, arrow.y - 1, 4, 6);
       }
+      
+      this.ctx.restore();
     }
 
     this.ctx.restore();

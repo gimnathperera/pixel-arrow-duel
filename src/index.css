@@ -2,26 +2,92 @@
 
 @theme {
   --font-pixel: "Press Start 2P", "Courier New", monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --bg-dark: #020617;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --accent-red: #ef4444;
+  --accent-blue: #3b82f6;
+  --accent-gold: #fbbf24;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #020617; /* Slate 950 */
+  background-color: var(--bg-dark);
+  background-image:
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(59, 130, 246, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(239, 68, 68, 0.05) 0%,
+      transparent 50%
+    );
   color: white;
   font-family: var(--font-pixel);
   user-select: none;
+  overflow-x: hidden;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
 }
 
 #root {
-  font-family: var(--font-pixel);
   min-height: 100vh;
 }
 
+.pixel-font {
+  font-family: var(--font-pixel);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.glass-button:active {
+  transform: translateY(0);
+}
+
 canvas {
-  image-rendering: -moz-crisp-edges;
-  image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Animations */
+@keyframes glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px currentColor);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s infinite;
 }
