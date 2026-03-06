@@ -1,73 +1,135 @@
-# React + TypeScript + Vite
+# 🎮 Pixel Arrow Duel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A fast-paced **local multiplayer pixel platformer** where two players battle it out with bows, arrows, jumps, and perfectly timed chaos.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Pixel Arrow Duel](screenshot.png)
 
-## React Compiler
+## ✨ About the Game
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Pixel Arrow Duel** is a **2D local multiplayer arena battle game** built for quick, competitive fun.  
+Two players share the same keyboard and fight in a retro-inspired platform arena using movement, jumps, and arrow attacks.
 
-## Expanding the ESLint configuration
+The game is designed to feel energetic and satisfying, with platform-based movement, bounce mechanics, and combat moments that make every duel feel intense.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Core Highlights
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- 🎯 **Two-player local multiplayer** — battle on the same keyboard
+- 🕹️ **Retro pixel-art style** — blocky visuals with a nostalgic arcade vibe
+- 🏟️ **Platform-based arena combat** — fight across multiple platform levels
+- 🟨 **Trampoline bars** — yellow bounce platforms for extra height and mobility
+- ❤️ **Live health bars** — track both players’ health in real time
+- 📱 **Viewport-friendly layout** — no scrolling, no distractions, just the game
+- ⌨️ **Keyboard-locked controls** — arrow keys stay inside the game instead of scrolling the page
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🧩 Gameplay Overview
+
+Each player controls their own character and uses movement, jumping, and shooting to outplay the other.
+
+The arena includes:
+
+- **Multiple solid platforms** for movement and positioning
+- **Yellow trampoline bars** for boosted jumps
+- **A moving platform** to add more unpredictability and strategy
+
+The objective is simple:
+
+> **Hit your opponent with arrows and reduce their health to zero before they do the same to you.**
+
+---
+
+## 🎮 Controls
+
+| Player        | Move         | Jump | Shoot   |
+| ------------- | ------------ | ---- | ------- |
+| **P1 (Red)**  | `WASD`       | `W`  | `Space` |
+| **P2 (Blue)** | `Arrow Keys` | `↑`  | `Enter` |
+
+---
+
+## 🏆 How to Win
+
+- Hit your opponent with arrows to reduce their health
+- Use the platforms smartly to dodge and gain better angles
+- Jump on **yellow bars** to launch higher into the air
+- Falling off the map or taking too much damage will cost health
+- The first player to lose all health **loses the round**
+- A new match starts automatically after a winner is decided
+
+---
+
+## 🛠️ Tech Stack
+
+Built using a modern frontend setup:
+
+- **React 19**
+- **TypeScript**
+- **Vite 7**
+- **Tailwind CSS v4** via `@tailwindcss/vite`
+- **Press Start 2P** (Google Fonts) for pixel typography
+
+---
+
+## 📦 Getting Started
+
+Run the project locally with:
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Then open the local URL shown in the terminal:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+http://localhost:5173
+```
+
+---
+
+## 📜 Available Scripts
+
+| Command           | Description                         |
+| ----------------- | ----------------------------------- |
+| `npm run dev`     | Start development server with HMR   |
+| `npm run build`   | TypeScript check + production build |
+| `npm run preview` | Serve production build locally      |
+| `npm run lint`    | Run ESLint                          |
+
+---
+
+## 🎨 Design Style
+
+The game follows a **retro arcade-inspired visual style** featuring:
+
+- Pixel typography
+- Bold character colors
+- Minimal HUD elements
+- Smooth and responsive gameplay
+
+The focus is on **fun, speed, and competitive gameplay** while keeping the visuals simple and nostalgic.
+
+---
+
+## 📄 License
+
+**Private / Unlicensed**
+
+Unless explicitly stated otherwise, this project is not licensed for public use or redistribution.
+
+---
+
+## 💥 Summary
+
+**Pixel Arrow Duel** is a competitive local multiplayer platform fighter where:
+
+- movement matters
+- timing matters
+- aim matters
+
+…and friendships might not survive the match.
